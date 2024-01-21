@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "name": "chrome-extension-study",
+  "description": "테스트 코드",
+  "background": { "service_worker": "src/scripts/background.js" },
+  "permissions": ["history","activeTab", "scripting", "storage", "bookmarks"],
+  "action": {
+    "default_popup": "src/popup/popup.html"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+,
+  "web_accessible_resources": [
+    {
+      "resources": ["star.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+,
+
+"content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }
+]
+
+
+
+}

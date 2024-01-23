@@ -1,36 +1,36 @@
 {
   "version": "1.0.0",
   "manifest_version": 3,
-  "name": "chrome-extension-study",
-  "description": "테스트 코드",
-  "background": { "service_worker": "src/scripts/background.js" },
-  "permissions": ["history","activeTab", "scripting", "storage", "bookmarks"],
-  "action": {
-    "default_popup": "src/popup/popup.html"
+  "name": "티.나.끝 - TIL 작성도우미",
+  "description": "티.나.끝 테스트 익스텐션",
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
   },
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "background": { "service_worker": "src/scripts/background.js" },
+  "permissions": ["history", "activeTab", "scripting", "storage", "bookmarks"],
+  "action": {
+    "default_icon": "logo.png",
+    "default_popup": "src/popup/popup.html",
+    "default_title": "티.나.끝 - TIL 작성 도우미"
+  },
+  "host_permissions": ["<all_urls>"],
 
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
-  }
-,
+  },
   "web_accessible_resources": [
     {
-      "resources": ["star.png"],
+      "resources": ["logo.png"],
       "matches": ["<all_urls>"]
     }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
   ]
-,
-
-"content_scripts": [
-  {
-    "matches": ["<all_urls>"],
-    "js": ["content.js"]
-  }
-]
-
-
-
 }

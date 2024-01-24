@@ -10,9 +10,9 @@ function createButton() {
   const button = document.createElement("TIL");
   button.id = "my-fixed-button";
   button.style =
-    'position: fixed; width:40px; height:40px; top: 40px; right: 10px; z-index: 100000000; background-image: url("' +
+    'position: fixed; width:100px; height:100px; top: 40px; right: 10px; z-index: 100000000; background-image: url("' +
     chrome.runtime.getURL("logo.png") +
-    '"); background-size: cover; background-color: transparent;';
+    '"); background-size: contain; background-color: transparent;';
   button.style.transition = "transform 0.5s ease";
   document.body.appendChild(button);
   initDraggable(button);

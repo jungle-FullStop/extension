@@ -10,7 +10,7 @@
     "128": "logo.png"
   },
   "background": { "service_worker": "src/scripts/background.js" },
-  "permissions": ["history", "activeTab", "scripting", "storage", "bookmarks"],
+  "permissions": ["cookies", "history", "activeTab", "scripting", "storage", "bookmarks"],
   "action": {
     "default_icon": "logo.png",
     "default_popup": "src/popup/popup.html",

@@ -1,3 +1,4 @@
+// 여기는 나중에 로그인이 되었을 때 진행되어야 하는 부분
 chrome.storage.sync.get("extensionEnabled", function (data) {
   if (data.extensionEnabled) {
     createButton();
@@ -6,11 +7,13 @@ chrome.storage.sync.get("extensionEnabled", function (data) {
   }
 });
 
+const BACKEND_URL = "http://localhost:3000/extension/history";
+
 function createButton() {
   const button = document.createElement("TIL");
   button.id = "my-fixed-button";
   button.style =
-    'position: fixed; width:100px; height:100px; top: 40px; right: 10px; z-index: 100000000; background-image: url("' +
+     'position: fixed; width:100px; height:100px; top: 40px; right: 10px; z-index: 100000000; background-image: url("' +
     chrome.runtime.getURL("logo.png") +
     '"); background-size: contain; background-color: transparent;';
   button.style.transition = "transform 0.5s ease";
@@ -77,14 +80,7 @@ function extractTapInfo() {
     { action: "extractTapInfo" },
     function (response_data) {
       response_data["tag"] = htag_select();
-      // console.log(htag_select())
-      // console.log(response)
-
-      const returnData = postData(
-        "http://localhost:3000/extension/history",
-        response_data
-      );
-      // alert(returnData)
+      sendRequestToBackend(response_data)
     }
   );
 }
@@ -106,6 +102,36 @@ function htag_select() {
   console.log(combinedText); // 최종 텍스트를 콘솔에 출력합니다.
   return combinedText; // 최종 텍스트를 반환합니다.
 }
+
+async function sendRequestToBackend(data = {}) {
+  chrome.storage.local.get(['utkCookie'], function(result) {
+    console.log("HH1 :" , result)
+    if (result.utkCookie) {
+      console.log("HH2 :" , result.utkCookie)
+      // 쿠키값을 사용하여 백엔드에 요청을 보냅니다
+      const url = BACKEND_URL;
+      const cookieValue = result.utkCookie.value;
+
+      data['utk'] = cookieValue;
+      
+      fetch(url, {
+        method: 'POST', // 또는 'POST', 'PUT' 등
+        headers: {
+          'Cookie': 'utk=' + cookieValue,
+          "Content-Type": "application/json", 
+        },
+        body : JSON.stringify(data),
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+    } else {
+      // 쿠키값이 없는 경우의 처리
+      console.log("No cookie found in local storage.");
+    }
+  });
+}
+
 
 async function postData(url = "", data = {}) {
   // 요청에 대한 옵션 설정

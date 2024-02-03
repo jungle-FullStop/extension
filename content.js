@@ -80,6 +80,8 @@ function extractTapInfo() {
     { action: "extractTapInfo" },
     function (response_data) {
       response_data["tag"] = htag_select();
+      response_data["description"] = description_select();
+      response_data["thumbnail"] = thumbnail_select();
       sendRequestToBackend(response_data)
     }
   );
@@ -87,7 +89,7 @@ function extractTapInfo() {
 
 function htag_select() {
   // h2, h3, h4 태그를 선택합니다.
-  const htags = window.document.querySelectorAll("h2, h3");
+  const htags = document.querySelectorAll("h1, h2, h3");
 
   let combinedText = [];
   for (let htag of htags) {
@@ -101,6 +103,14 @@ function htag_select() {
 
   console.log(combinedText); // 최종 텍스트를 콘솔에 출력합니다.
   return combinedText; // 최종 텍스트를 반환합니다.
+}
+
+function description_select() {
+  return document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+}
+
+function thumbnail_select() {
+  return document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
 }
 
 async function sendRequestToBackend(data = {}) {

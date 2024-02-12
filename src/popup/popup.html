@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <title>확장 프로그램 팝업</title>
     <style>
+      :root {
+            --background-color: #333;
+            --text-color: white;
+            --primary-color: #ffc107;
+            --secondary-color: #2196f3;
+            --login-button-bg: #4CAF50; /* Login button background color */
+            --login-button-hover-bg: #45a049; /* Hover state */
+        }
       body {
         width: 230px;
         margin: 0;
@@ -92,6 +100,20 @@
       .slider.round:before {
         border-radius: 50%;
       }
+
+      .login-button {
+            background-color: var(--login-button-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s; /* Smooth transition for hover state */
+        }
+        .login-button:hover {
+            background-color: var(--login-button-hover-bg);
+        }
     </style>
   </head>
   <body>
@@ -108,7 +130,7 @@
     </div>
     <p>당신의 기록을 도와줄 수 있게 활성화해주세요.</p>
 
-    <button id="login-button">Login with Google</button>
+    <button id="login-button" class="login-button">티나끝 로그인</button>
     <div id="login-status">Checking login status...</div>
     <div id="login-feedback" style="display: none; color: #ffc107;">Logging in...</div> <!-- Login feedback element -->
   </body>

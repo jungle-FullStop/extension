@@ -22,6 +22,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "sendRequestToBackend":
             console.log("REQ :",request.data)
             sendRequestToBackend(request.data).then(response => {
+                console.log("익스텐션 : ",response)
                 sendResponse({data: response});
             }).catch(error => {
                 sendResponse({error: error.toString()});
@@ -59,7 +60,7 @@ async function sendRequestToBackend(data = {}) {
         console.log("쿠기 :", result)
         if (result) {
             const response = await actualSendRequestFunction(data, result.value);
-            console.log(response);
+            return response
         } else {
             console.log("No cookie found in local storage.");
         }

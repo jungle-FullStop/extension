@@ -147,7 +147,7 @@ function extractTabInfoAndSend() {
   });
 }
 
-function htag_select() {
+function selectHTags() {
   // h2, h3, h4 태그를 선택합니다.
   const htags = document.querySelectorAll("h1, h2, h3");
 
@@ -177,7 +177,50 @@ async function sendRequestToBackend(data = {}) {
     if (response.error) {
       console.error('Error:', response.error);
     } else {
-      console.log('Response:', response.data);
+      console.log('Response:', response.data.result); // duplicate
+      if (response.data.result === "duplicate") {
+        displayCuteAlert("이미 기록해놓았어요!", '#ff4081'); // Call function to display the alert
+      }
+
+      if (response.data.result === "ok") {
+        displayCuteAlert("저장되었어요!", '#4CAF50'); // Call function to display the alert
+      }
+
     }
   });
+}
+
+
+function displayCuteAlert(message, color) {
+  const alertBox = document.createElement('til-alert');
+  alertBox.textContent = message;
+  alertBox.style.cssText = `
+    position: fixed;
+    bottom: -100px; // Start off screen
+    transform: translateX(-50%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: bottom 0.5s ease, opacity 0.5s ease;
+    z-index: 100000003; // Ensure it's above most content
+  `;
+  alertBox.style.left = '50%'
+  alertBox.style.backgroundColor = color;
+  document.body.appendChild(alertBox);
+
+  // Slide up animation
+  setTimeout(() => {
+    alertBox.style.bottom = '100px'; // Move into view
+  }, 100);
+
+  // Wait for 3 seconds, then slide down and fade out
+  setTimeout(() => {
+    alertBox.style.bottom = '-100px'; // Move out of view
+    alertBox.style.opacity = '0'; // Start fading out
+  }, 3000);
+
+  // Remove the alert from the DOM after the animation
+  setTimeout(() => {
+    alertBox.remove();
+  }, 3500); // Adjust timing if needed
 }

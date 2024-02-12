@@ -1,89 +1,110 @@
+// Define backend URL
+// const BACKEND_URL = 'https://tilfullstop.site';
 const BACKEND_URL = 'http://localhost:5173';
 
-  document.addEventListener('DOMContentLoaded', function() {
-    var checkbox = document.getElementById('toggle-switch');
-  
-    // 저장된 상태를 로드하여 스위치 설정
-    chrome.storage.sync.get('extensionEnabled', function(data) {
-      checkbox.checked = data.extensionEnabled;
-    });
-  
-    // 스위치 상태 변경 시, 새로운 값을 저장
-    checkbox.addEventListener('change', function() {
-      chrome.storage.sync.set({'extensionEnabled': checkbox.checked});
-    });
+// Event listener for DOMContentLoaded
+document.addEventListener('DOMContentLoaded', initPopup);
 
-    checkLoginStatus()
+function initPopup() {
+  setupToggleSwitch();
+  setupLoginButton();
+  checkLoginStatus();
+}
 
+// 슬라이드 부분
+function setupToggleSwitch() {
+  const checkbox = document.getElementById('toggle-switch');
+  chrome.storage.sync.get('extensionEnabled', data => {
+    checkbox.checked = !!data.extensionEnabled;
   });
-
-
-  const check_cookies = null;
-
-  document.getElementById('login-button').addEventListener('click', function() {
-    console.log(check_cookies);
-    // 여기에 로그인 페이지로 리디렉션하거나 OAuth 프로세스 시작하는 코드 작성
-    chrome.windows.create({
-      url: BACKEND_URL, // 로그인 페이지 URL
-      type: 'popup', // 창 유형을 'popup'으로 설정
-    });
+  checkbox.addEventListener('change', () => {
+    chrome.storage.sync.set({ 'extensionEnabled': checkbox.checked });
   });
+}
 
-  chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.loggedIn) {
-      // 로그인 상태에 따라 UI 업데이트
-      document.getElementById('login-status').textContent = 'Logged In';
+function setupLoginButton() {
+  // Initially check if the user is already logged in
+  checkLoginStatus().then(isLoggedIn => {
+    if (isLoggedIn) {
+      updateUI(true); // User is already logged in, update UI accordingly
     } else {
-      document.getElementById('login-status').textContent = 'Not Logged In';
-    }
-  });
+      // Setup the login button for users not logged in
+      const loginButton = document.getElementById('login-button');
+      const loginFeedback = document.getElementById('login-feedback'); // Assuming you have this element for feedback
+      loginFeedback.style.display = 'none'; // Hide feedback by default
 
-  function checkLoginStatus() {
-    // 웹사이트에서 쿠키를 가져옵니다
-    chrome.cookies.get({ url: BACKEND_URL, name: 'utk' }, function(newCookie) {
-      console.log(newCookie);
-      if (newCookie) {
-        // 확장 프로그램에서 저장된 쿠키값을 확인합니다
-        chrome.storage.local.get(['utkCookie'], function(result) {
-          if (!result.utkCookie || result.utkCookie.value !== newCookie.value) {
-            // 쿠키가 다르면 새로운 쿠키값으로 갱신합니다
-            chrome.storage.local.set({ utkCookie: newCookie }, function() {
-              console.log('Extension cookie updated:', newCookie);
+      loginButton.addEventListener('click', () => {
+        loginButton.disabled = true; // Disable button to prevent multiple clicks
+        loginFeedback.style.display = 'block'; // Show login feedback
+
+        initiateLoginProcess()
+          .then(token => {
+            // Authentication token retrieved after successful login
+            updateUI(true); // Update UI for logged-in state
+            // Optionally store the retrieved token for future use
+            chrome.storage.local.set({ 'authToken': token }, () => {
+              console.log('Authentication token stored:', token);
             });
-          }
-        });
-        updateUI(true);
-      } else {
-        updateUI(false);
-      }
-    });
-  }
-  
-  function setExtensionCookie(newCookie) {
-    chrome.cookies.set({
-      url: BACKEND_URL, // 쿠키를 설정할 URL
-      name: newCookie.name, // 쿠키 이름
-      value: newCookie.value, // 쿠키 값
-      // 필요한 경우 다른 쿠키 속성들도 설정할 수 있습니다
-    }, function(setCookie) {
-      // 새로 설정된 쿠키에 대한 처리
-      console.log('New Cookie Set:', setCookie);
-    });
-  }
-
-
-  function updateUI(loggedIn) {
-    if (loggedIn) {
-      document.getElementById('login-status').textContent = 'Logged In';
-    } else {
-      // 로그아웃 상태일 때 UI 업데이트
-      document.getElementById('login-status').textContent = 'Logged Out';
+          })
+          .catch(error => {
+            // Log and optionally display the error if login failed
+            console.error('Login failed:', error);
+            updateUI(false);
+          })
+          .finally(() => {
+            // Re-enable the login button and hide the feedback regardless of the outcome
+            loginButton.disabled = false;
+            loginFeedback.style.display = 'none';
+          });
+      });
     }
+  });
+}
+
+function initiateLoginProcess() {
+  return new Promise((resolve, reject) => {
+    // Open login page
+    chrome.windows.create({ url: BACKEND_URL, type: 'popup' }, (newWindow) => {
+      const tabId = newWindow.tabs[0].id;
+      // Listen for updates to the tab
+      chrome.tabs.onUpdated.addListener(function listener(updatedTabId, changeInfo, tab) {
+        // 로그인하게 되면 무조건 /home 으로 가기에 해당 url 감지하기
+        if (updatedTabId === tabId && changeInfo.url && changeInfo.url.includes(BACKEND_URL + '/home')) {
+          // 로그인한 페이지의 쿠키값 확인이 된다면
+          chrome.cookies.get({ url: BACKEND_URL, name: 'utk' }, function(cookie) {
+            if (cookie) {
+              chrome.tabs.onUpdated.removeListener(listener); // Stop listening
+              chrome.tabs.remove(tabId); // Close the login tab/window
+              resolve(cookie.value); // Resolve the promise with the authToken value
+            } else {
+              reject(new Error('Auth token not found in cookies'));
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+function checkLoginStatus() {
+  return new Promise(resolve => {
+    chrome.cookies.get({ url: BACKEND_URL, name: 'utk' }, function(cookie) {
+      resolve(!!cookie); // Resolves true if the cookie exists, indicating logged-in status
+    });
+  });
+}
+
+function updateUI(loggedIn) {
+  const statusText = loggedIn ? 'Logged In' : 'Logged Out';
+  document.getElementById('login-status').textContent = statusText;
+  // Optionally, adjust the login button based on login status
+  const loginButton = document.getElementById('login-button');
+  if (loginButton) {
+    loginButton.style.display = loggedIn ? 'none' : 'block'; // Hide login button if logged in
   }
-
-  /*
-
-  애시당초, Extension을 열었다면 그때 로그인 체크하는데
-  체크하는 로직이 쿠키값으로 판단해야 하는데
-
-  */
+}
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.loggedIn !== undefined) {
+    updateUI(message.loggedIn);
+  }
+});

@@ -1,30 +1,78 @@
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "extractTapInfo") {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            var activeTab = tabs[0];
-            var url = activeTab.url;
-            var title = activeTab.title;
-            sendResponse({url: url, title: title});
-        });
-        return true; // 비동기 응답을 위해 필요합니다.
+const BACKEND_URL = "http://localhost:3000/extension/history";
+// const BACKEND_URL = "https://tilfullstop.site/api/extension/history";
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    switch (request.action) {
+        case "extractTabInfo":
+            extractTabInfo().then(response => {
+                sendResponse({data: response});
+            }).catch(error => {
+                sendResponse({error: error.toString()});
+            });
+            return true; // Keep the message channel open for the asynchronous response
+        case "checkLogin":
+            // Assuming checkLoginStatus is also async
+            checkLoginStatus().then(status => {
+                sendResponse({loggedIn: status});
+            }).catch(error => {
+                sendResponse({error: error.toString()});
+            });
+            return true;
+        case "sendRequestToBackend":
+            console.log("REQ :",request.data)
+            sendRequestToBackend(request.data).then(response => {
+                sendResponse({data: response});
+            }).catch(error => {
+                sendResponse({error: error.toString()});
+            });
+            return true;
     }
 });
 
-
-
-// 변환되는 쿠키값을 찾아서, 만일 해당 쿠키값이 변경되면 바로 익스텐션 화면에 적용될 수 있게 해주는 함수. 차후 구현예정
-chrome.cookies.onChanged.addListener(function(changeInfo) {
+function extractTabInfo() {
+    return new Promise((resolve, reject) => {
+        chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+            if (tabs.length > 0) {
+                var activeTab = tabs[0];
+                resolve({url: activeTab.url, title: activeTab.title});
+            } else {
+                reject(new Error("No active tab found"));
+            }
+        });
+    });
+}
+chrome.cookies.onChanged.addListener(changeInfo => {
     if (changeInfo.cookie.name === 'utk') {
-      console.log("HEY!")
-      chrome.runtime.sendMessage({ loggedIn: changeInfo.cookie.value !== '' });
+        chrome.runtime.sendMessage({ loggedIn: changeInfo.cookie.value !== '' });
     }
-  });
+});
 
+function checkLoginStatus(sendResponse) {
+    const loggedIn = true; // Placeholder for actual login check logic
+    sendResponse({ loggedIn });
+}
 
-  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "checkLogin") {
-      // 로그인 상태 확인 로직
-      var loggedIn = true;
-      sendResponse({ loggedIn: loggedIn });
+async function sendRequestToBackend(data = {}) {
+    try {
+        const result = await chrome.cookies.get({ url: BACKEND_URL, name: 'utk' })
+        console.log("쿠기 :", result)
+        if (result) {
+            const response = await actualSendRequestFunction(data, result.value);
+            console.log(response);
+        } else {
+            console.log("No cookie found in local storage.");
+        }
+    } catch (error) {
+        console.error('Error:', error);
     }
-  });
+}
+
+async function actualSendRequestFunction(data, cookieValue) {
+    const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, utk: cookieValue }),
+    });
+    return response.json();
+}

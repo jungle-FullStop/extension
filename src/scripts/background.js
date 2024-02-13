@@ -1,5 +1,5 @@
-const BACKEND_URL = "http://localhost:3000/extension/history";
-// const BACKEND_URL = "https://tilfullstop.site/api/extension/history";
+// const BACKEND_URL = "http://localhost:3000/extension/history";
+const BACKEND_URL = "https://tilfullstop.site/api/extension/history";
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

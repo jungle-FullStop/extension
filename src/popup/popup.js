@@ -1,6 +1,6 @@
 // Define backend URL
-const BACKEND_URL = 'https://tilfullstop.site';
-// const BACKEND_URL = 'http://localhost:5173';
+// const BACKEND_URL = 'https://tilfullstop.site';
+const BACKEND_URL = 'http://localhost:5173';
 
 // Event listener for DOMContentLoaded
 document.addEventListener('DOMContentLoaded', initPopup);

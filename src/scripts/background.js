@@ -1,5 +1,5 @@
-const BACKEND_URL = "http://localhost:3000/extension/history";
-// const BACKEND_URL = "https://tilfullstop.site/api/extension/history";
+// const BACKEND_URL = "http://localhost:3000/extension/history";
+const BACKEND_URL = "https://tilfullstop.site/api/extension/history";
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -28,6 +28,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse({error: error.toString()});
             });
             return true;
+        case "fetchList":
+            sendRequestToBackend({},'/list')
+                .then(data => sendResponse({data}))
+                .catch(error => sendResponse({error: error.toString()}));
+            return true;
+        case "deleteItem":
+            console.log('delete', request)
+            sendRequestToBackend({history_id:request.itemId},'/delete')
+                .then(data => sendResponse({data}))
+                .catch(error => sendResponse({error: error.toString()}));
+            return true;
     }
 });
 
@@ -54,12 +65,12 @@ function checkLoginStatus(sendResponse) {
     sendResponse({ loggedIn });
 }
 
-async function sendRequestToBackend(data = {}) {
+async function sendRequestToBackend(data = {}, url = '') {
     try {
         const result = await chrome.cookies.get({ url: BACKEND_URL, name: 'utk' })
         console.log("쿠기 :", result)
         if (result) {
-            const response = await actualSendRequestFunction(data, result.value);
+            const response = await actualSendRequestFunction(data, result.value, url);
             return response
         } else {
             console.log("No cookie found in local storage.");
@@ -69,8 +80,8 @@ async function sendRequestToBackend(data = {}) {
     }
 }
 
-async function actualSendRequestFunction(data, cookieValue) {
-    const response = await fetch(BACKEND_URL, {
+async function actualSendRequestFunction(data, cookieValue, url) {
+    const response = await fetch(BACKEND_URL + url, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, utk: cookieValue }),

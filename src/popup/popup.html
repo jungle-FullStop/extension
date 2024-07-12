@@ -114,6 +114,65 @@
         .login-button:hover {
             background-color: var(--login-button-hover-bg);
         }
+
+        #list-container {
+          margin-top: 15px; /* Add space above the list */
+          padding: 0;
+          list-style: none; /* Remove default list styling */
+        }
+
+        .list-item {
+          background-color: var(--background-color); /* Use the same as body for consistency */
+          border-bottom: 1px solid var(--primary-color); /* Add a separator line */
+          padding: 8px 10px; /* Add some padding around the text and button */
+          display: flex; /* Use flexbox for alignment */
+          align-items: center; /* Align items vertically */
+          justify-content: space-between; /* Space between title and button */
+          margin-bottom: 5px; /* Add space between list items */
+        }
+
+        .list-item:last-child {
+          border-bottom: none; /* Remove bottom border for the last item */
+        }
+
+        .list-item span {
+          color: var(--text-color); /* Text color for list item title */
+          flex-grow: 1; /* Allow title to take up available space */
+        }
+
+        .delete-button {
+          background-color: transparent; /* Make the button background transparent */
+          border: none;
+          padding: 0; /* Remove padding to let the icon dictate the button size */
+          cursor: pointer;
+          display: flex; /* Use flex to center the icon */
+          align-items: center;
+          justify-content: center;
+        }
+
+        .icon-trash {
+          width: 24px; /* Set the size of the icon */
+          height: 24px;
+        }
+
+        .delete-button:hover {
+          background-color: darken(var(--secondary-color), 10%); /* Slightly darken the button on hover */
+        }
+
+        .toggle-list-button {
+          background-color: var(--primary-color);
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          margin: 10px 0;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+
+        .toggle-list-button:hover {
+          background-color: darken(var(--primary-color), 10%);
+        }
     </style>
   </head>
   <body>
@@ -132,7 +191,9 @@
 
     <button id="login-button" class="login-button">티나끝 로그인</button>
     <div id="login-status">Checking login status...</div>
-    <div id="login-feedback" style="display: none; color: #ffc107;">Logging in...</div> <!-- Login feedback element -->
+    <div id="login-feedback" style="display: none; color: #ffc107;">로그인 상태입니다</div> <!-- Login feedback element -->
+    <button id="toggle-list-button" class="toggle-list-button">내기록 펼치기</button> <!-- Toggle button -->
+    <div id="list-container" style="display: none;"></div> <!-- Initially hidden -->
   </body>
   <script src="popup.js"></script>
 </html>
